@@ -4,18 +4,27 @@ on:
 
 jobs:
   build-win:
-    runs-on: windows-latest   # Windows 包必须在 Windows runner 上打
-    env:
-      # README 要求的三个必填环境变量，自用随便填
-      DSH_DESKTOP_APP_ID: com.example.dshdesktop
-      DSH_DESKTOP_AUTO_UPDATE_ENV: test
-      DOWNLOAD_TEST_ORIGIN: https://desktop-updates.example.com
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4        # 自动读 package.json 里的 packageManager
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+
+      - name: Write apps/desktop/.env.windows
+        shell: bash
+        run: |
+          cat > apps/desktop/.env.windows <<'EOF'
+          DSH_DESKTOP_APP_ID=com.example.dshdesktop
+          DSH_DESKTOP_AUTO_UPDATE_ENV=test
+          DOWNLOAD_TEST_ORIGIN=https://desktop-updates.example.com
+          DOWNLOAD_TEST_RELEASE_ID=3f9c2a7d81b4e6502c8d5a19f0e73b46
+          DSH_DESKTOP_MANDATORY_UPDATE_TEST_ORIGIN=https://policy-updates.example.com
+          DSH_DESKTOP_MANDATORY_UPDATE_CONFIG='{"allowedAuthOrigins":["https://login.example.com"]}'
+          DSH_DESKTOP_WINDOWS_SIGNATURE_CACHE_CONCURRENCY=4
+          EOF
+
       - run: pnpm install --frozen-lockfile
       - run: pnpm run package:desktop:win:x64:unsigned
       - uses: actions/upload-artifact@v4
